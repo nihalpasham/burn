@@ -167,6 +167,29 @@ impl<O> ExecutionPlanStore<O> {
             }
         }).collect()
     }
+
+    /// Debug method to access the actual optimization objects.
+    /// This allows access to FuseTrace for CubeCL fusion backends.
+    pub fn debug_optimizations(&self) -> Vec<ExecutionPlanOptimization<'_, O>> {
+        self.plans.iter().enumerate().map(|(id, plan)| {
+            ExecutionPlanOptimization {
+                id,
+                operation_count: plan.operations.len(),
+                operations: plan.operations.clone(),
+                optimization_strategy: &plan.optimization.strategy,
+            }
+        }).collect()
+    }
+
+    /// Debug method to extract FuseTrace information from execution plans.
+    pub fn debug_fuse_trace_info(&self) -> Vec<String>
+    where
+        O: std::fmt::Debug,
+    {
+        self.plans.iter().map(|plan| {
+            crate::debug::extract_fuse_trace_info(&plan.optimization.strategy)
+        }).collect()
+    }
 }
 
 /// Summary information about an execution plan for debugging.
@@ -195,4 +218,14 @@ pub struct ExecutionPlanDetails {
     pub trigger_count: usize,
     pub triggers: Vec<String>,
     pub optimization_info: String,
+}
+
+/// Execution plan with access to the actual optimization object.
+/// This allows access to FuseTrace for CubeCL fusion backends.
+#[derive(Debug)]
+pub struct ExecutionPlanOptimization<'a, O> {
+    pub id: usize,
+    pub operation_count: usize,
+    pub operations: Vec<OperationIr>,
+    pub optimization_strategy: &'a ExecutionStrategy<O>,
 }

@@ -2,6 +2,7 @@ use super::{Event, EventProcessor, ItemLazy, Metrics};
 use crate::metric::store::EventStoreClient;
 use std::sync::Arc;
 
+#[allow(dead_code)]
 /// An [event processor](EventProcessor) that handles:
 ///   - Computing and storing metrics in an [event store](crate::metric::store::EventStore).
 #[derive(new)]

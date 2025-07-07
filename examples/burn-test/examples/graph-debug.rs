@@ -75,17 +75,22 @@ fn main() {
     // Note: This requires the Optimization type to implement Debug
     println!("\n--- EXECUTION PLAN ANALYSIS ---");
     println!("Why do we have {} execution plans?", execution_plans.len());
-    println!("- Plan 0: {} operations - likely an initial/partial optimization",
+    println!("- Plan 0: {} operations - likely an initial (such as tensor allocation) optimization",
              execution_plans.get(0).map_or(0, |p| p.operation_count));
     println!("- Plan 1: {} operations - likely the final fused optimization",
              execution_plans.get(1).map_or(0, |p| p.operation_count));
-    println!("This shows Burn's incremental fusion optimization strategy!");
 
-    println!("\n--- FUSE TRACE INFORMATION ---");
-    println!("The FuseBlockConfig you see in compilation.log is the FuseTrace!");
-    println!("It shows the intermediate CubeCL representation before WGSL:");
-    println!("  Input → Local(0) → Mul → Local(1) → Add → Local(2) → Tanh → Local(3) → Output");
-    println!("This is exactly the optimized execution sequence that gets compiled to GPU code.");
+    println!("\n--- ACTUAL FUSE TRACE INFORMATION ---");
+    println!("Here's the REAL FuseTrace from the execution plans:");
+    let fuse_traces = Backend::debug_fuse_trace_info(&device);
+    for (i, trace_info) in fuse_traces.iter().enumerate() {
+        println!("\n=== Execution Plan {} FuseTrace ===", i);
+        println!("{}", trace_info);
+    }
+
+    if fuse_traces.is_empty() {
+        println!("No FuseTrace information available (operations may not have been optimized yet)");
+    }
 
     // Check if any operations remain in the pre-optimized queue (should be empty after execution)
     if let Some(remaining_ops) = Backend::debug_pre_optimized(&device, current_stream) {

@@ -161,6 +161,18 @@ where
         let store = server.debug_post_optimized();
         store.debug_detailed_plans()
     }
+
+    /// Debug method to extract FuseTrace information from execution plans.
+    /// This shows the actual optimization details including FuseTrace for CubeCL backends.
+    pub fn debug_fuse_trace_info(device: &B::Device) -> Vec<String>
+    where
+        <B::FusionRuntime as crate::FusionRuntime>::Optimization: std::fmt::Debug,
+    {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        let store = server.debug_post_optimized();
+        store.debug_fuse_trace_info()
+    }
 }
 
 /// The status of a [builder](OptimizationBuilder).

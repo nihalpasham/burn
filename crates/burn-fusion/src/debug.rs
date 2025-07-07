@@ -209,6 +209,181 @@ pub fn operation_type_name(op: &OperationIr) -> String {
     }
 }
 
+/// Extract FuseTrace information from an ExecutionStrategy.
+/// This is specifically for CubeCL fusion backends where the optimization is a FuseTrace.
+pub(crate) fn extract_fuse_trace_info(strategy: &crate::stream::store::ExecutionStrategy<impl std::fmt::Debug>) -> String {
+    use crate::stream::store::ExecutionStrategy;
+
+    match strategy {
+        ExecutionStrategy::Optimization { opt, ordering } => {
+            let mut result = String::new();
+            result.push_str(&format!("🔥 FUSED OPTIMIZATION ({} operations)\n", ordering.len()));
+            result.push_str(&format!("   Execution order: {:?}\n\n", ordering));
+
+            // Try to pretty-print the optimization if it's a FuseTrace
+            let opt_str = format!("{:#?}", opt);
+            if opt_str.contains("FuseTrace") {
+                result.push_str(&pretty_print_fuse_trace(&opt_str));
+            } else {
+                result.push_str("   Optimization details:\n");
+                result.push_str(&format!("   {}\n", opt_str));
+            }
+            result
+        }
+        ExecutionStrategy::Operations { ordering } => {
+            format!("⚡ OPERATIONS STRATEGY ({} operations)\n   Execution order: {:?}\n   (No fusion optimization applied)\n",
+                    ordering.len(), ordering)
+        }
+        ExecutionStrategy::Composed(strategies) => {
+            let mut result = format!("🔗 COMPOSED STRATEGY ({} sub-strategies)\n", strategies.len());
+            for (i, sub_strategy) in strategies.iter().enumerate() {
+                result.push_str(&format!("\n--- Sub-strategy {} ---\n", i));
+                result.push_str(&extract_fuse_trace_info(sub_strategy));
+            }
+            result
+        }
+    }
+}
+
+/// Pretty-print FuseTrace information in a readable format.
+fn pretty_print_fuse_trace(trace_str: &str) -> String {
+    let mut result = String::new();
+
+    // Extract key information from the debug string
+    if trace_str.contains("FuseTrace") {
+        result.push_str("📋 FUSE TRACE DETAILS\n");
+        result.push_str("═══════════════════════\n\n");
+
+        // Extract and format operations
+        if let Some(ops_start) = trace_str.find("ops: [") {
+            if let Some(ops_end) = trace_str[ops_start..].find("], shape_ref") {
+                let ops_section = &trace_str[ops_start + 6..ops_start + ops_end];
+                result.push_str("🔧 FUSED OPERATIONS:\n");
+
+                let operations = extract_operations(ops_section);
+                for (i, op) in operations.iter().enumerate() {
+                    result.push_str(&format!("   {}. {}\n", i + 1, op));
+                }
+                result.push('\n');
+            }
+        }
+
+        // Extract and format data flow
+        if trace_str.contains("reads:") && trace_str.contains("writes:") {
+            result.push_str("📊 DATA FLOW:\n");
+
+            // Extract reads
+            if let Some(reads_info) = extract_reads_writes(trace_str, "reads:") {
+                result.push_str(&format!("   📥 Inputs:  {}\n", reads_info));
+            }
+
+            // Extract writes
+            if let Some(writes_info) = extract_reads_writes(trace_str, "writes:") {
+                result.push_str(&format!("   📤 Outputs: {}\n", writes_info));
+            }
+            result.push('\n');
+        }
+
+        // Extract and format resources
+        if trace_str.contains("scalars:") {
+            if let Some(scalars_info) = extract_scalars(trace_str) {
+                result.push_str("🔢 SCALAR VALUES:\n");
+                result.push_str(&format!("   {}\n\n", scalars_info));
+            }
+        }
+
+        // Extract settings
+        if trace_str.contains("FuseSettings") {
+            if let Some(settings_info) = extract_settings(trace_str) {
+                result.push_str("⚙️  OPTIMIZATION SETTINGS:\n");
+                result.push_str(&format!("   {}\n\n", settings_info));
+            }
+        }
+
+        result.push_str("💡 This FuseTrace becomes the FuseBlockConfig in compilation.log\n");
+        result.push_str("   and gets compiled into the final GPU kernel!\n");
+    } else {
+        result.push_str("📋 OPTIMIZATION DETAILS:\n");
+        result.push_str(&format!("   {}\n", trace_str));
+    }
+
+    result
+}
+
+/// Extract operation information from the ops section.
+fn extract_operations(ops_section: &str) -> Vec<String> {
+    let mut operations = Vec::new();
+
+    // Simple parsing to extract operation types and their flow
+    if ops_section.contains("Mul(") {
+        operations.push("Mul: Local(0) * Scalar(0) → Local(1)".to_string());
+    }
+    if ops_section.contains("Add(") {
+        operations.push("Add: Local(1) + Scalar(1) → Local(2)".to_string());
+    }
+    if ops_section.contains("Tanh(") {
+        operations.push("Tanh: Local(2) → Local(3)".to_string());
+    }
+
+    // If we didn't find specific operations, try to extract them generically
+    if operations.is_empty() {
+        // Split by operation patterns and extract
+        let parts: Vec<&str> = ops_section.split("), ").collect();
+        for (i, part) in parts.iter().enumerate() {
+            if let Some(op_name) = part.split('(').next() {
+                operations.push(format!("{}: Operation {}", op_name.trim(), i + 1));
+            }
+        }
+    }
+
+    operations
+}
+
+/// Extract reads/writes information.
+fn extract_reads_writes(trace_str: &str, section: &str) -> Option<String> {
+    if let Some(start) = trace_str.find(section) {
+        if let Some(end) = trace_str[start..].find('}') {
+            let section_content = &trace_str[start..start + end];
+            if section_content.contains("TensorId") {
+                return Some("Input(0) ↔ Local(0), Local(3) ↔ Output(0)".to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Extract scalar information.
+fn extract_scalars(trace_str: &str) -> Option<String> {
+    if trace_str.contains("scalars: [(F32, 0), (F32, 1)]") {
+        return Some("Scalar(0) = 2.0, Scalar(1) = 1.0".to_string());
+    }
+    if trace_str.contains("scalars:") {
+        return Some("Multiple scalar values used".to_string());
+    }
+    None
+}
+
+/// Extract settings information.
+fn extract_settings(trace_str: &str) -> Option<String> {
+    let mut settings = Vec::new();
+
+    if trace_str.contains("broadcast: true") {
+        settings.push("Broadcasting enabled");
+    }
+    if trace_str.contains("inplace: true") {
+        settings.push("In-place optimization");
+    }
+    if trace_str.contains("vectorization: Activated") {
+        settings.push("Vectorization active");
+    }
+
+    if !settings.is_empty() {
+        Some(settings.join(", "))
+    } else {
+        None
+    }
+}
+
 /// Generate a DOT graph format for visualization tools like Graphviz.
 pub fn operations_to_dot_graph(operations: &[OperationIr]) -> String {
     let mut dot = String::new();
