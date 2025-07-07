@@ -17,6 +17,9 @@ pub mod stream;
 /// Search module for stream optimizations.
 pub(crate) mod search;
 
+/// Debug module for graph visualization and analysis.
+pub mod debug;
+
 mod backend;
 mod fusion;
 mod ops;

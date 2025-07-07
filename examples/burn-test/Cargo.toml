@@ -1,0 +1,20 @@
+[package]
+authors = ["Nihal P"]
+edition.workspace = true
+license.workspace = true
+name = "burn-test"
+description = "Just a simple test playground"
+publish = false
+version.workspace = true
+
+[lints]
+workspace = true
+
+
+[dependencies]
+burn = {path = "../../crates/burn", features = ["wgpu", "fusion"]}
+burn-fusion = {path = "../../crates/burn-fusion"}
+burn-ir = {path = "../../crates/burn-ir"}
+burn-tensor = {path = "../../crates/burn-tensor"}
+burn-common = {path = "../../crates/burn-common"}
+env_logger = "0.10"

@@ -1,0 +1,2510 @@
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x199b6890ad41369d67bf0469731bff75,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl::kernel::index::slice::slice_kernel::SliceKernel<
+    f32,
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x2be95a32c52a1c221579ec236cf34966,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            2,
+            TensorCompilationArg {
+                inplace: None,
+                vectorisation: Some (
+                    1,
+                ),
+            },
+            Sequence [
+                 (),
+                 (),
+            ],
+            TensorCompilationArg {
+                inplace: None,
+                vectorisation: Some (
+                    1,
+                ),
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl: : kernel: : index: : slice: : slice_kernel: : SliceKernel<f32,
+    cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<f32>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<f32>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_u32: array<u32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn slice_kernel(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+var l_mut_2: u32;
+let l_0 = info[3u];
+let l_1 = id >= l_0;
+if l_1 {
+return;
+}
+l_mut_2 = 0u;
+let l_3 = info[info[9u] + 0u];
+let l_4 = id / l_3;
+let l_5 = info[info[7u] + 0u];
+let l_6 = l_4 % l_5;
+let l_7 = l_6 + scalars_u32[0];
+let l_8 = info[info[8u] + 0u];
+let l_9 = l_7 * l_8;
+l_mut_2 = l_mut_2 + l_9;
+let l_10 = info[info[9u] + 1u];
+let l_11 = id / l_10;
+let l_12 = info[info[7u] + 1u];
+let l_13 = l_11 % l_12;
+let l_14 = l_13 + scalars_u32[1];
+let l_15 = info[info[8u] + 1u];
+let l_16 = l_14 * l_15;
+l_mut_2 = l_mut_2 + l_16;
+let l_17 = buffer_0_global[l_mut_2];
+buffer_1_global[id] = l_17;
+}
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x199b6890ad41369d67bf0469731bff75,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0xf9ad91a7090f4b0dc07f4b73490c8759,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x9f37601028584e4190dc902115d686d5,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x9f37601028584e4190dc902115d686d5,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x9f37601028584e4190dc902115d686d5,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x9f37601028584e4190dc902115d686d5,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x9f37601028584e4190dc902115d686d5,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x9f37601028584e4190dc902115d686d5,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+
+[START_KERNEL_COMPILATION]
+name: burn_cubecl_fusion::elemwise::optimization::elemwise_fuse::ElemwiseFuse<
+    cubecl_wgpu::runtime::WgpuRuntime,
+>
+cube_dim: (16, 16, 1)
+info: KernelId {
+    type_id: TypeId (
+        0x9f37601028584e4190dc902115d686d5,
+    ),
+    info: Some (
+         (
+            CubeDim {
+                x: 16,
+                y: 16,
+                z: 1,
+            },
+            FuseBlockConfig {
+                rank: 2,
+                ref_layout: Concrete (
+                    Output (
+                        0,
+                        F32,
+                        IsRef,
+                    ),
+                ),
+                ops: Sequence {
+                    values: [
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Input (
+                                    0,
+                                    F32,
+                                    SameAsRef,
+                                ),
+                                out: Local (
+                                    0,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Mul (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    0,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    0,
+                                    F32,
+                                ),
+                                out: Local (
+                                    1,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Add (
+                            BinaryFuseArgs {
+                                lhs: Local (
+                                    1,
+                                    F32,
+                                ),
+                                rhs: Scalar (
+                                    1,
+                                    F32,
+                                ),
+                                out: Local (
+                                    2,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Tanh (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    2,
+                                    F32,
+                                ),
+                                out: Local (
+                                    3,
+                                    F32,
+                                ),
+                            },
+                        ),
+                        Assign (
+                            UnaryFuseArgs {
+                                input: Local (
+                                    3,
+                                    F32,
+                                ),
+                                out: Output (
+                                    0,
+                                    F32,
+                                    IsRef,
+                                ),
+                            },
+                        ),
+                    ],
+                },
+                width: 2,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                    GlobalScalarCompilationArg {
+                        elem: Float (
+                            F32,
+                        ),
+                    },
+                ],
+                reshapes: Sequence [],
+                ,
+            },
+            GlobalArgs {
+                tensors: Sequence [
+                    GlobalTensorCompilationArg {
+                        tensor: TensorCompilationArg {
+                            inplace: None,
+                            vectorisation: Some (
+                                2,
+                            ),
+                        },
+                        elem: Float (
+                            F32,
+                        ),
+                        broadcasted: false,
+                    },
+                ],
+                scalars: Sequence [],
+                reshapes: Sequence [],
+                ,
+            },
+        ),
+    ),
+    mode: Some (
+        Unchecked,
+    ),
+    type_name: "burn_cubecl_fusion: : elemwise: : optimization: : elemwise_fuse: : ElemwiseFuse<cubecl_wgpu: : runtime: : WgpuRuntime>",
+}
+source:
+```wgsl
+@group(0)
+@binding(0)
+var<storage, read_write> buffer_0_global: array<vec2<f32>>;
+
+@group(0)
+@binding(1)
+var<storage, read_write> buffer_1_global: array<vec2<f32>>;
+
+@group(0)
+@binding(2)
+var<storage, read_write> info: array<u32>;
+
+@group(0)
+@binding(3)
+var<storage, read_write> scalars_f32: array<f32, 2>;
+
+const WORKGROUP_SIZE_X = 16u;
+const WORKGROUP_SIZE_Y = 16u;
+const WORKGROUP_SIZE_Z = 1u;
+
+@compute
+@workgroup_size(16, 16, 1)
+fn elemwise_fuse(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(num_workgroups) num_workgroups: vec3<u32>,
+) {
+var a_0: array<u32, 2>;
+
+var a_1: array<u32, 2>;
+
+let id = (global_id.z * num_workgroups.x * WORKGROUP_SIZE_X * num_workgroups.y * WORKGROUP_SIZE_Y) + (global_id.y * num_workgroups.x * WORKGROUP_SIZE_X) + global_id.x;
+let l_2 = info[info[7u] + 0u];
+a_0[0u] = l_2;
+let l_3 = info[info[9u] + 0u];
+a_1[0u] = l_3;
+let l_4 = info[info[7u] + 1u];
+a_0[1u] = l_4;
+let l_5 = info[info[9u] + 1u];
+a_1[1u] = l_5;
+let l_6 = 2u;
+let l_7 = l_6 - 0u;
+let l_8 = 2u;
+let l_9 = l_8 - 0u;
+let l_10 = info[3u];
+let l_11 = id < l_10;
+if l_11 {
+let l_12 = buffer_0_global[id];
+let l_13 = l_12;
+let l_14 = l_13;
+let l_15 = l_14 * scalars_f32[0];
+let l_16 = l_15;
+let l_17 = l_16;
+let l_18 = l_17 + scalars_f32[1];
+let l_19 = l_18;
+let l_20 = l_19;
+let l_21 = safe_tanh(l_20);
+let l_22 = l_21;
+let l_23 = l_22;
+buffer_1_global[id] = l_23;
+}
+}
+/// Metal has a weird numerical behaviour with tanh for inputs over 43.0
+fn safe_tanh_scalar(x: f32) -> f32 {
+    if x > 43.0 {
+        return 1.0;
+    } else {
+        return tanh(x);
+    }
+}
+
+fn safe_tanh(x: vec2<f32>) -> vec2<f32> {
+    return vec2(
+        safe_tanh_scalar(x[0]),
+        safe_tanh_scalar(x[1]),
+    );
+}
+
+
+
+```
+[END_KERNEL_COMPILATION]
+

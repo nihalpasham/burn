@@ -1,0 +1,15 @@
+[profiling]
+logger = { log = "debug", level = "full" }
+
+[autotune]
+logger = { log = "debug", level = "full" }
+cache = "target"
+
+[compilation]
+logger = { log = "debug", level = "full", file = "compilation.log" }
+cache = "target"
+
+# Profiling also has "basic" and "medium". Compilation log levels are "disabled", "basic" or "full".
+
+
+

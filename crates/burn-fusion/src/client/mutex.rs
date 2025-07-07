@@ -233,3 +233,11 @@ where
         server.resolve_server_bool::<B>(&tensor.into_ir())
     }
 }
+
+impl<R: FusionRuntime> MutexFusionClient<R> {
+    /// Debug method to access the fusion server.
+    /// This is used for debugging and graph visualization purposes.
+    pub fn debug_server(&self) -> &Arc<Mutex<FusionServer<R>>> {
+        &self.server
+    }
+}

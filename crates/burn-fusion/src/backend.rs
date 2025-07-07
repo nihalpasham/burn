@@ -1,7 +1,7 @@
 use crate::{
     FusionClientLocator, FusionTensor,
     client::FusionClient,
-    stream::{Context, OrderedExecution},
+    stream::{Context, OrderedExecution, StreamId},
 };
 use burn_ir::{BackendIr, OperationIr, TensorHandle};
 use burn_tensor::{
@@ -59,6 +59,107 @@ impl<B: FusionBackend> Backend for Fusion<B> {
 
     fn ad_enabled() -> bool {
         false
+    }
+}
+
+impl<B: FusionBackend> Fusion<B>
+where
+    B::FusionRuntime: FusionRuntime<FusionClient = crate::client::MutexFusionClient<B::FusionRuntime>>,
+{
+    /// Debug method to access the pre-optimized operation queue for a specific stream.
+    /// Returns the raw operation sequence as written by the user.
+    pub fn debug_pre_optimized(device: &B::Device, stream_id: StreamId) -> Option<Vec<OperationIr>> {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        server.debug_pre_optimized(stream_id).cloned()
+    }
+
+    /// Debug method to access all pre-optimized operation queues.
+    /// Returns a map of stream IDs to their operation sequences.
+    pub fn debug_all_pre_optimized(device: &B::Device) -> std::collections::HashMap<StreamId, Vec<OperationIr>> {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        server.debug_all_pre_optimized()
+            .into_iter()
+            .map(|(id, ops)| (id, ops.clone()))
+            .collect()
+    }
+
+    /// Debug method to get a summary of the current fusion state.
+    pub fn debug_fusion_summary(device: &B::Device) -> crate::server::FusionDebugSummary {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        server.debug_fusion_summary()
+    }
+
+    /// Debug method to generate ASCII graph of pre-optimized operations for a stream.
+    pub fn debug_pre_optimized_ascii_graph(device: &B::Device, stream_id: StreamId) -> Option<String> {
+        Self::debug_pre_optimized(device, stream_id)
+            .map(|ops| crate::debug::operations_to_ascii_graph(&ops))
+    }
+
+    /// Debug method to generate ASCII graph of all pre-optimized operations.
+    pub fn debug_all_pre_optimized_ascii_graph(device: &B::Device) -> String {
+        let all_ops = Self::debug_all_pre_optimized(device);
+        let mut result = String::new();
+
+        for (stream_id, ops) in all_ops {
+            result.push_str(&format!("=== Stream {} ===\n", stream_id));
+            result.push_str(&crate::debug::operations_to_ascii_graph(&ops));
+            result.push_str("\n");
+        }
+
+        result
+    }
+
+    /// Debug method to generate DOT graph format for visualization tools.
+    pub fn debug_pre_optimized_dot_graph(device: &B::Device, stream_id: StreamId) -> Option<String> {
+        Self::debug_pre_optimized(device, stream_id)
+            .map(|ops| crate::debug::operations_to_dot_graph(&ops))
+    }
+
+    /// Debug method to access the post-optimized execution plans.
+    /// Returns the execution plan store containing optimized strategies.
+    pub fn debug_post_optimized(device: &B::Device) -> crate::stream::store::ExecutionPlanSummary {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        let store = server.debug_post_optimized();
+
+        // For now, return summary information since ExecutionPlan is private
+        // In the future, we could expose more detailed execution plan information
+        crate::stream::store::ExecutionPlanSummary {
+            id: 0, // Summary of all plans
+            operation_count: store.debug_plan_count(),
+            trigger_count: store.debug_summary().len(),
+        }
+    }
+
+    /// Debug method to get execution plan summaries.
+    pub fn debug_execution_plan_summaries(device: &B::Device) -> Vec<crate::stream::store::ExecutionPlanSummary> {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        let store = server.debug_post_optimized();
+        store.debug_summary()
+    }
+
+    /// Debug method to get execution plan summaries with operation types.
+    pub fn debug_execution_plan_summaries_with_ops(device: &B::Device) -> Vec<crate::stream::store::ExecutionPlanSummaryWithOps> {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        let store = server.debug_post_optimized();
+        store.debug_summary_with_operations()
+    }
+
+    /// Debug method to get detailed execution plan information.
+    /// This shows the operations, triggers, and optimization details for each plan.
+    pub fn debug_execution_plan_details(device: &B::Device) -> Vec<crate::stream::store::ExecutionPlanDetails>
+    where
+        <B::FusionRuntime as crate::FusionRuntime>::Optimization: std::fmt::Debug,
+    {
+        let client = CLIENTS.client::<B::FusionRuntime>(&device.clone());
+        let server = client.debug_server().lock();
+        let store = server.debug_post_optimized();
+        store.debug_detailed_plans()
     }
 }
 

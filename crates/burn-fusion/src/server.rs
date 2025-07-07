@@ -39,6 +39,37 @@ where
         self.handles.create_tensor_uninit()
     }
 
+    /// Debug method to access the pre-optimized operation queue for a specific stream.
+    /// Returns the raw operation sequence as written by the user.
+    pub fn debug_pre_optimized(&self, stream_id: StreamId) -> Option<&Vec<OperationIr>> {
+        self.streams.debug_operation_queue(stream_id)
+    }
+
+    /// Debug method to access all pre-optimized operation queues.
+    /// Returns a map of stream IDs to their operation sequences.
+    pub fn debug_all_pre_optimized(&self) -> std::collections::HashMap<StreamId, &Vec<OperationIr>> {
+        self.streams.debug_all_operation_queues()
+    }
+
+    /// Debug method to access the post-optimized execution plans.
+    /// Returns the execution plan store containing optimized strategies.
+    pub(crate) fn debug_post_optimized(&self) -> &crate::stream::store::ExecutionPlanStore<R::Optimization> {
+        self.streams.debug_execution_plans()
+    }
+
+    /// Debug method to get a summary of the current fusion state.
+    pub fn debug_fusion_summary(&self) -> FusionDebugSummary {
+        let pre_optimized = self.debug_all_pre_optimized();
+        let post_optimized = self.debug_post_optimized();
+
+        FusionDebugSummary {
+            stream_count: pre_optimized.len(),
+            total_operations: pre_optimized.values().map(|ops| ops.len()).sum(),
+            execution_plan_count: post_optimized.debug_plan_count(),
+            execution_plan_summaries: post_optimized.debug_summary(),
+        }
+    }
+
     pub fn read_float<B>(
         &mut self,
         tensor: TensorIr,
@@ -210,4 +241,13 @@ where
 
         id
     }
+}
+
+/// Summary information about the current fusion state for debugging.
+#[derive(Debug, Clone)]
+pub struct FusionDebugSummary {
+    pub stream_count: usize,
+    pub total_operations: usize,
+    pub execution_plan_count: usize,
+    pub execution_plan_summaries: Vec<crate::stream::store::ExecutionPlanSummary>,
 }

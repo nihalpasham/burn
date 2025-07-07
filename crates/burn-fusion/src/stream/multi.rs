@@ -375,6 +375,27 @@ impl<R: FusionRuntime> MultiStream<R> {
             self.streams.remove(&s);
         }
     }
+
+    /// Debug method to access the operation queue for a specific stream.
+    /// Returns the pre-optimized operation sequence.
+    pub fn debug_operation_queue(&self, stream_id: StreamId) -> Option<&Vec<OperationIr>> {
+        self.streams.get(&stream_id).map(|s| &s.queue.global)
+    }
+
+    /// Debug method to access all operation queues.
+    /// Returns a map of stream IDs to their operation sequences.
+    pub fn debug_all_operation_queues(&self) -> std::collections::HashMap<StreamId, &Vec<OperationIr>> {
+        self.streams
+            .iter()
+            .map(|(id, stream)| (*id, &stream.queue.global))
+            .collect()
+    }
+
+    /// Debug method to access the execution plan store.
+    /// Returns the post-optimized execution plans.
+    pub(crate) fn debug_execution_plans(&self) -> &ExecutionPlanStore<R::Optimization> {
+        &self.optimizations
+    }
 }
 
 pub(crate) struct Stream<R: FusionRuntime> {

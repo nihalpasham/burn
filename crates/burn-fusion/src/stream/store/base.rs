@@ -91,4 +91,108 @@ impl<O> ExecutionPlanStore<O> {
             criteria.push(trigger);
         }
     }
+
+    #[allow(dead_code)]
+    /// Debug method to access all execution plans.
+    /// Returns the post-optimized execution plans.
+    pub fn debug_plans(&self) -> &Vec<ExecutionPlan<O>> {
+        &self.plans
+    }
+
+    /// Debug method to get the number of execution plans.
+    pub fn debug_plan_count(&self) -> usize {
+        self.plans.len()
+    }
+
+    /// Debug method to serialize execution plans to JSON.
+    /// Note: This requires the optimization type O and related types to implement Serialize.
+    /// Currently disabled due to missing Serialize implementations.
+    #[allow(dead_code)]
+    pub fn debug_to_json(&self) -> Result<String, serde_json::Error>
+    where
+        O: serde::Serialize,
+    {
+        // TODO: Enable when ExecutionPlan, BlockOptimization, and ExecutionTrigger implement Serialize
+        // For now, return a simple error message as JSON
+        Ok("{\"error\": \"Serialization not yet implemented for ExecutionPlan\"}".to_string())
+    }
+
+    /// Debug method to get a summary of all execution plans.
+    pub fn debug_summary(&self) -> Vec<ExecutionPlanSummary> {
+        self.plans
+            .iter()
+            .enumerate()
+            .map(|(id, plan)| ExecutionPlanSummary {
+                id,
+                operation_count: plan.operations.len(),
+                trigger_count: plan.triggers.len(),
+            })
+            .collect()
+    }
+
+    /// Debug method to get execution plan summaries with operation types.
+    pub fn debug_summary_with_operations(&self) -> Vec<ExecutionPlanSummaryWithOps> {
+        self.plans
+            .iter()
+            .enumerate()
+            .map(|(id, plan)| {
+                let operation_types: Vec<String> = plan.operations
+                    .iter()
+                    .map(|op| crate::debug::operation_type_name(op))
+                    .collect();
+
+                ExecutionPlanSummaryWithOps {
+                    id,
+                    operation_count: plan.operations.len(),
+                    trigger_count: plan.triggers.len(),
+                    operation_types,
+                }
+            })
+            .collect()
+    }
+
+    /// Debug method to get detailed execution plan information.
+    pub fn debug_detailed_plans(&self) -> Vec<ExecutionPlanDetails>
+    where
+        O: std::fmt::Debug,
+    {
+        self.plans.iter().enumerate().map(|(id, plan)| {
+            ExecutionPlanDetails {
+                id,
+                operation_count: plan.operations.len(),
+                operations: plan.operations.iter().map(|op| format!("{:?}", op)).collect(),
+                trigger_count: plan.triggers.len(),
+                triggers: plan.triggers.iter().map(|trigger| format!("{:?}", trigger)).collect(),
+                optimization_info: format!("{:?}", plan.optimization),
+            }
+        }).collect()
+    }
+}
+
+/// Summary information about an execution plan for debugging.
+#[derive(Debug, Clone)]
+pub struct ExecutionPlanSummary {
+    pub id: usize,
+    pub operation_count: usize,
+    pub trigger_count: usize,
+}
+
+/// Summary information about an execution plan with operation types for debugging.
+#[derive(Debug, Clone)]
+pub struct ExecutionPlanSummaryWithOps {
+    pub id: usize,
+    pub operation_count: usize,
+    pub trigger_count: usize,
+    pub operation_types: Vec<String>,
+}
+
+/// Detailed information about an execution plan for debugging.
+#[derive(Debug, Clone)]
+pub struct ExecutionPlanDetails {
+    pub id: usize,
+    pub operation_count: usize,
+    pub operations: Vec<String>,
+    pub trigger_count: usize,
+    pub triggers: Vec<String>,
+    pub optimization_info: String,
 }
