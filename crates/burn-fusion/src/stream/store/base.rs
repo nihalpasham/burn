@@ -168,6 +168,7 @@ impl<O> ExecutionPlanStore<O> {
         }).collect()
     }
 
+    #[allow(dead_code)]
     /// Debug method to access the actual optimization objects.
     /// This allows access to FuseTrace for CubeCL fusion backends.
     pub fn debug_optimizations(&self) -> Vec<ExecutionPlanOptimization<'_, O>> {
@@ -220,6 +221,7 @@ pub struct ExecutionPlanDetails {
     pub optimization_info: String,
 }
 
+#[allow(dead_code)]
 /// Execution plan with access to the actual optimization object.
 /// This allows access to FuseTrace for CubeCL fusion backends.
 #[derive(Debug)]
